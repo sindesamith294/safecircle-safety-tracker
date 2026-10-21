@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeCircle — Consent-Based Family & Friends Safety Tracker</title>
+    <meta name="description" content="SafeCircle: Privacy-first live location sharing, consent management, safety check-ins, and ML movement anomaly detection.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="brand">
+            <div class="brand-logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <circle cx="12" cy="12" r="4" fill="currentColor"></circle>
+                    <line x1="12" y1="2" x2="12" y2="4"></line>
+                    <line x1="12" y1="20" x2="12" y2="22"></line>
+                    <line x1="2" y1="12" x2="4" y2="12"></line>
+                    <line x1="20" y1="12" x2="22" y2="12"></line>
+                </svg>
+            </div>
+            <div>
+                <div class="brand-title">SafeCircle</div>
+                <div class="brand-subtitle">Consent-Based Safety &amp; Live Location Tracker</div>
+            </div>
+        </div>
+        <div class="header-actions">
+            <div class="persona-switch">
+                <span class="persona-label">Active Persona:</span>
+                <button id="btnPersonaA" class="btn-persona active" onclick="switchPersona('A')">
+                    <span class="dot dot-alice"></span> Alice (User A - Viewer)
+                </button>
+                <button id="btnPersonaB" class="btn-persona" onclick="switchPersona('B')">
+                    <span class="dot dot-bob"></span> Bob (User B - Broadcaster)
+                </button>
+            </div>
+            <button class="btn btn-demo" onclick="runAutomatedMilestoneDemo()">
+                ⚡ Run Automated Milestone 1 Demo
+            </button>
+        </div>
+    </header>
+
+    <main class="dashboard-grid">
+        <!-- Left Column: Controls & Privacy State -->
+        <section class="panel control-panel">
+            <div class="persona-card" id="personaCard">
+                <div class="persona-avatar" id="personaAvatar">A</div>
+                <div class="persona-info">
+                    <h2 id="personaName">Alice Walker</h2>
+                    <p id="personaPhone">+15551000001</p>
+                    <span class="badge badge-viewer" id="personaRole">Viewer Role</span>
+                </div>
+            </div>
+
+            <!-- Panel Content for Alice (User A) -->
+            <div id="aliceControls" class="role-controls">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Request Location Access</h3>
+                        <span class="tag">Privacy Enforced</span>
+                    </div>
+                    <p class="card-desc">Enter a contact's registered phone number to request permission to see their live GPS.</p>
+                    <div class="form-group">
+                        <label for="requestPhoneInput">Contact Phone Number</label>
+                        <input type="text" id="requestPhoneInput" value="+15551000002" placeholder="+15551000002">
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="sendSharingRequest()">
+                        📤 Request Location Access
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Approved Contacts</h3>
+                        <span class="badge" id="approvedCount">0 Active</span>
+                    </div>
+                    <div id="approvedList" class="contacts-list">
+                        <div class="empty-state">No contacts sharing location with you yet.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Safety Check-in</h3>
+                    </div>
+                    <div class="form-group">
+                        <label for="checkinDestination">Destination</label>
+                        <input type="text" id="checkinDestination" value="Downtown Library" placeholder="e.g. Home, Office">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="checkinMinutes">ETA (Minutes)</label>
+                            <input type="number" id="checkinMinutes" value="20" min="1" max="180">
+                        </div>
+                        <button class="btn btn-secondary" style="margin-top:20px" onclick="scheduleCheckin()">
+                            ⏱ Schedule
+                        </button>
+                    </div>
+                    <div id="checkinsList" class="checkins-list"></div>
+                </div>
+            </div>
+
+            <!-- Panel Content for Bob (User B) -->
+            <div id="bobControls" class="role-controls hidden">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Location Sharing Status</h3>
+                        <span class="badge badge-active" id="bobSharingStatus">SHARING ACTIVE</span>
+                    </div>
+                    <p class="card-desc">You are in full control. When you revoke permission, contact access stops immediately.</p>
+                    <div class="action-buttons-row">
+                        <button class="btn btn-danger" id="btnRevokeAlice" onclick="revokeSharingForAlice()">
+                            🛑 Revoke Alice's Access
+                        </button>
+                        <button class="btn btn-success" id="btnApproveAlice" onclick="approveSharingForAlice()">
+                            ✅ Approve Alice
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Incoming Sharing Requests</h3>
+                        <span class="tag tag-pending" id="pendingCount">0 Pending</span>
+                    </div>
+                    <div id="pendingRequestsList" class="pending-list">
+                        <div class="empty-state">No pending requests right now.</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>GPS Broadcaster Simulation</h3>
+                    </div>
+                    <p class="card-desc">Transmit live coordinates to the Spring Boot REST API (<code>POST /api/locations</code>):</p>
+                    <div class="sim-routes">
+                        <button class="btn btn-outline" onclick="simulateGpsMove(37.774929, -122.419416, 'Downtown Office')">
+                            🏢 Downtown
+                        </button>
+                        <button class="btn btn-outline" onclick="simulateGpsMove(37.783333, -122.416667, 'Market Street')">
+                            🚶 Market St
+                        </button>
+                        <button class="btn btn-outline" onclick="simulateGpsMove(37.8024, -122.4058, 'Fisherman Wharf')">
+                            ⚓ Wharf
+                        </button>
+                        <button class="btn btn-outline" onclick="simulateGpsMove(37.7690, -122.4467, 'Twin Peaks')">
+                            ⛰ Twin Peaks
+                        </button>
+                    </div>
+                    <p class="tip-text">💡 Or click anywhere directly on the map to transmit that exact GPS location!</p>
+                </div>
+            </div>
+
+            <!-- System Activity Log Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>Audit &amp; Consent Log</h3>
+                    <button class="btn-clear" onclick="clearLogs()">Clear</button>
+                </div>
+                <div id="auditLog" class="audit-log">
+                    <div class="log-entry log-system">SafeCircle Backend connected. Ready for test users.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Column: Interactive Map & Live Tracking -->
+        <section class="panel map-panel">
+            <div class="map-overlay-header">
+                <div class="map-status-pill">
+                    <span class="pulse-indicator" id="mapPulse"></span>
+                    <span id="mapStatusText">Viewing Mode: Active</span>
+                </div>
+                <div class="gps-telemetry" id="gpsTelemetry">
+                    <div><strong>Lat:</strong> <span id="telemetryLat">37.774929</span></div>
+                    <div><strong>Lng:</strong> <span id="telemetryLng">-122.419416</span></div>
+                    <div><strong>Accuracy:</strong> <span id="telemetryAcc">&plusmn;5.0 m</span></div>
+                    <div><strong>Last Update:</strong> <span id="telemetryTime">Just now</span></div>
+                </div>
+            </div>
+
+            <div id="consentBanner" class="consent-banner hidden">
+                <div class="banner-icon">🔒</div>
+                <div class="banner-content">
+                    <h4 id="bannerTitle">Access Denied: Sharing Revoked</h4>
+                    <p id="bannerDesc">User B has revoked location access. Privacy rules prevent any coordinates from being transmitted or viewed.</p>
+                </div>
+            </div>
+
+            <div id="map" class="map-container"></div>
+        </section>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="app.js"></script>
+</body>
+</html>
