@@ -88,6 +88,50 @@ body {
     color: var(--text-secondary);
 }
 
+.endpoint-badges {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.endpoint-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+    padding: 5px 12px;
+    border-radius: 9999px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.78rem;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.endpoint-pill:hover {
+    background: rgba(99, 102, 241, 0.15);
+    border-color: var(--primary);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.live-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--success);
+    box-shadow: 0 0 8px var(--success);
+    animation: livePulse 2s infinite ease-in-out;
+}
+
+@keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.85); }
+}
+
 .header-actions {
     display: flex;
     align-items: center;

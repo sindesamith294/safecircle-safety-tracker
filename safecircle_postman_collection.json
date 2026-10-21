@@ -1,0 +1,150 @@
+{
+  "info": {
+    "name": "SafeCircle REST API",
+    "description": "Comprehensive Postman collection for testing SafeCircle consent-based location sharing, authentication, safety check-ins, and alerts.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "1. Login User A (Alice)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+15551000001\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": "http://localhost:8080/api/auth/login"
+          }
+        },
+        {
+          "name": "2. Login User B (Bob)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+15551000002\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": "http://localhost:8080/api/auth/login"
+          }
+        },
+        {
+          "name": "3. Register New User",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Charlie Davis\",\n  \"phoneNumber\": \"+15551000003\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": "http://localhost:8080/api/auth/register"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Location Sharing Requests",
+      "item": [
+        {
+          "name": "User A Requests User B's Location",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{TOKEN_USER_A}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetPhoneNumber\": \"+15551000002\",\n  \"expiresInMinutes\": 60\n}"
+            },
+            "url": "http://localhost:8080/api/sharing-requests"
+          }
+        },
+        {
+          "name": "User B Views Pending Requests",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN_USER_B}}"}],
+            "url": "http://localhost:8080/api/sharing-requests/pending"
+          }
+        },
+        {
+          "name": "User B Approves Sharing Request",
+          "request": {
+            "method": "PATCH",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN_USER_B}}"}],
+            "url": "http://localhost:8080/api/sharing-requests/1/approve"
+          }
+        },
+        {
+          "name": "User B Revokes Permission",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN_USER_B}}"}],
+            "url": "http://localhost:8080/api/sharing-permissions/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "GPS Locations",
+      "item": [
+        {
+          "name": "User B Submits GPS Update",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{TOKEN_USER_B}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 37.774929,\n  \"longitude\": -122.419416,\n  \"accuracyM\": 5.2\n}"
+            },
+            "url": "http://localhost:8080/api/locations"
+          }
+        },
+        {
+          "name": "User A Reads User B's Location (Consent Gated)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN_USER_A}}"}],
+            "url": "http://localhost:8080/api/contacts/2/location"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Safety Check-ins",
+      "item": [
+        {
+          "name": "Schedule Safety Check-in",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{TOKEN_USER_A}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"destinationLabel\": \"Downtown Metro Station\",\n  \"dueInMinutes\": 30\n}"
+            },
+            "url": "http://localhost:8080/api/checkins"
+          }
+        },
+        {
+          "name": "Confirm Safety Check-in",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{TOKEN_USER_A}}"}],
+            "url": "http://localhost:8080/api/checkins/1/confirm"
+          }
+        }
+      ]
+    }
+  ]
+}
